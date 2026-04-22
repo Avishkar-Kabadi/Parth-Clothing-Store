@@ -1,121 +1,71 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useAuthStore } from './store/useStore';
+import { getDatabase } from './lib/database';
+import Login from './pages/Login';
+import DashboardLayout from './components/DashboardLayout';
+import Dashboard from './pages/Dashboard';
+import Billing from './pages/Billing';
+import Ledger from './pages/Ledger';
+import Users from './pages/Users';
+import Products from './pages/Products';
+import EditLedgerRecord from './pages/EditLedgerRecord';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [dbReady, setDbReady] = useState(false);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+
+  useEffect(() => {
+    getDatabase().then(() => setDbReady(true));
+
+    window.electronAPI?.onTriggerBackup?.(async () => {
+      try {
+        const db = await getDatabase();
+        const data = {
+          users: await db.users.find().exec().then(ds => ds.map(d => d.toJSON())),
+          products: await db.products.find().exec().then(ds => ds.map(d => d.toJSON())),
+          sales: await db.sales.find().exec().then(ds => ds.map(d => d.toJSON())),
+        };
+        window.electronAPI?.saveBackup?.({ data, isManual: false });
+      } catch (e) {
+        console.error('Backup generation failed', e);
+        window.electronAPI?.saveBackup?.({ data: { error: 'Failed' }, isManual: false });
+      }
+    });
+  }, []);
+
+  if (!dbReady) return <div className="h-screen w-screen flex items-center justify-center bg-zinc-950 text-white">Loading Database...</div>;
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <HashRouter>
+      <div className="flex flex-col h-screen w-screen overflow-hidden bg-zinc-950 text-zinc-50 font-sans">
+        {/* Custom Titlebar */}
+        <div className="h-10 w-full bg-zinc-900 border-b border-zinc-800 flex justify-between items-center select-none" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
+          <div className="pl-4 text-xs font-semibold tracking-wider text-zinc-400">PARTH CLOTHING STORE</div>
+          <div className="flex pl-4" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+            <button onClick={() => window.electronAPI?.windowControls('minimize')} className="h-10 px-4 hover:bg-zinc-800 transition-colors text-zinc-400 cursor-pointer">—</button>
+            <button onClick={() => window.electronAPI?.windowControls('maximize')} className="h-10 px-4 hover:bg-zinc-800 transition-colors text-zinc-400 cursor-pointer">□</button>
+            <button onClick={() => window.electronAPI?.windowControls('close')} className="h-10 px-4 hover:bg-red-600 hover:text-white transition-colors text-zinc-400 cursor-pointer">x</button>
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
+        {/* Main Content */}
+        <div className="flex-1 overflow-hidden relative">
+          <Routes>
+            <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+            <Route path="/" element={isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" />}>
+              <Route index element={<Dashboard />} />
+              <Route path="billing" element={<Billing />} />
+              <Route path="ledger" element={<Ledger />} />
+              <Route path="edit-ledger/:id" element={<EditLedgerRecord />} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+              <Route path="users" element={<Users />} />
+              <Route path="products" element={<Products />} />
+            </Route>
+          </Routes>
+        </div>
+      </div>
+    </HashRouter>
+  );
 }
-
-export default App
