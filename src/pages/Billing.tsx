@@ -2,7 +2,29 @@ import { useState, useEffect } from 'react';
 import { useCartStore, useAuthStore } from '../store/useStore';
 import { getDatabase } from '../lib/database';
 import type { ProductDocType, SaleDocType } from '../lib/database';
-import { Plus, Trash2, Printer } from 'lucide-react';
+import { Plus, Trash2, Printer, AlertCircle } from 'lucide-react';
+
+function validatePhone(phone: string) {
+  if (!phone.trim()) return 'Phone number is required.';
+  if (!/^\d{10}$/.test(phone.trim())) return 'Phone must be exactly 10 digits.';
+  return '';
+}
+
+function validateName(name: string) {
+  if (!name.trim()) return 'Customer name is required.';
+  if (name.trim().length < 4) return 'Name must be at least 4 characters.';
+  return '';
+}
+
+function FieldError({ msg }: { msg: string }) {
+  if (!msg) return null;
+  return (
+    <p className="flex items-center gap-1 text-xs text-red-400 mt-1">
+      <AlertCircle className="w-3 h-3 shrink-0" />
+      {msg}
+    </p>
+  );
+}
 
 export default function Billing() {
   const { user } = useAuthStore();
@@ -17,6 +39,12 @@ export default function Billing() {
   const [manualPrice, setManualPrice] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [nameTouched, setNameTouched] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+
+  const nameError = nameTouched ? validateName(customerName) : '';
+  const phoneError = phoneTouched ? validatePhone(customerPhone) : '';
 
   useEffect(() => {
     let sub: any;
@@ -41,7 +69,7 @@ export default function Billing() {
     return () => clearTimeout(t);
   }, [customerPhone]);
 
-  const isFormValid = customerName.trim().length >= 2 && customerPhone.trim().length >= 7 && items.length > 0;
+  const isFormValid = validateName(customerName) === '' && validatePhone(customerPhone) === '' && items.length > 0;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -72,6 +100,9 @@ export default function Billing() {
   };
 
   const handleSave = async () => {
+    setNameTouched(true);
+    setPhoneTouched(true);
+    if (!isFormValid) return;
     setIsSubmitting(true);
     try {
       const db = await getDatabase();
@@ -95,6 +126,9 @@ export default function Billing() {
   };
 
   const handlePrintAndSave = async () => {
+    setNameTouched(true);
+    setPhoneTouched(true);
+    if (!isFormValid) return;
     setIsSubmitting(true);
     try {
       const db = await getDatabase();
@@ -118,7 +152,10 @@ export default function Billing() {
     }
   };
 
-  const inputCls = "w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-zinc-100 transition-colors";
+  const inputCls = (hasErr: boolean) =>
+    `w-full px-4 py-2 bg-zinc-950 border rounded-lg focus:outline-none focus:ring-2 text-zinc-100 transition-colors ${
+      hasErr ? 'border-red-500 focus:ring-red-500' : 'border-zinc-800 focus:ring-blue-500'
+    }`;
 
   return (
     <div className="flex flex-col h-full space-y-6">
@@ -135,22 +172,25 @@ export default function Billing() {
                   placeholder="Customer Name *"
                   value={customerName}
                   onChange={e => setCustomerInfo(e.target.value, customerPhone)}
-                  className={inputCls}
-                  required
-                  minLength={2}
+                  onBlur={() => setNameTouched(true)}
+                  className={inputCls(!!nameError)}
+                  maxLength={50}
                 />
+                <FieldError msg={nameError} />
               </div>
               <div>
                 <input
                   type="text"
-                  placeholder="Phone Number *"
+                  placeholder="Phone Number (10 digits) *"
                   value={customerPhone}
-                  onChange={e => setCustomerInfo(customerName, e.target.value)}
-                  className={inputCls}
-                  required
-                  minLength={7}
-                  maxLength={15}
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setCustomerInfo(customerName, val);
+                  }}
+                  onBlur={() => setPhoneTouched(true)}
+                  className={inputCls(!!phoneError)}
                 />
+                <FieldError msg={phoneError} />
               </div>
             </div>
           </div>
@@ -163,7 +203,7 @@ export default function Billing() {
                 <select
                   value={selectedProductId}
                   onChange={e => setSelectedProductId(e.target.value)}
-                  className={inputCls}
+                  className={inputCls(false)}
                   required
                 >
                   <option value="">Select Product... *</option>
@@ -181,7 +221,7 @@ export default function Billing() {
                   step="0.01"
                   min="0"
                   required
-                  className={inputCls}
+                  className={inputCls(false)}
                 />
               </div>
               <div className="md:w-24">
@@ -192,7 +232,7 @@ export default function Billing() {
                   onChange={e => setQuantity(e.target.value)}
                   min="1"
                   required
-                  className={inputCls}
+                  className={inputCls(false)}
                 />
               </div>
               <button
