@@ -52,26 +52,26 @@ This is the main screen for billing customers.
 ## 4. SALES LEDGER (Admins Only)
 The Ledger tracks all historical sales made by the store.
 
-### View Sales: See every bill, including the customer's name, total amount, taxes, date, and payment mode.
-### Searching: You can search directly by Customer Name or Phone Number using the search box at the top.
-### Editing: Click the edit icon to modify past bills. You can adjust items, prices, and the applied tax percentage if a mistake was made.
+- View Sales: See every bill, including the customer's name, total amount, taxes, date, and payment mode.
+- Searching: You can search directly by Customer Name or Phone Number using the search box at the top.
+- Editing: Click the edit icon to modify past bills. You can adjust items, prices, and the applied tax percentage if a mistake was made.
 
 
 ## PRODUCT CATALOG (Admins Only)
-### Manage your store's inventory items that appear in the Quick Bill dropdown.
-### Products are automatically sorted alphabetically by Category, then by Name.
-### Use the Search bar to quickly find existing products.
-### To add a product, type the Product Name and Category, then click [+ Add Product].
+- Manage your store's inventory items that appear in the Quick Bill dropdown.
+- Products are automatically sorted alphabetically by Category, then by Name.
+- Use the Search bar to quickly find existing products.
+- To add a product, type the Product Name and Category, then click [+ Add Product].
 
 
 ## STAFF MANAGEMENT (Admins Only)
 
-### Add new staff members by typing a Username and Password, then clicking [+ Add Staff].
-### Usernames must be unique (the system will alert you if you try to use an existing one).
-### Staff can be deleted by clicking the red trash icon (Admins cannot be deleted).
+- Add new staff members by typing a Username and Password, then clicking [+ Add Staff].
+- Usernames must be unique (the system will alert you if you try to use an existing one).
+- Staff can be deleted by clicking the red trash icon (Admins cannot be deleted).
 
 
 ## GENERAL FEATURES
 
-### Database Backup: Click the "Backup Database" button at the bottom of the sidebar at any time to export a full copy of your system data securely to your Documents/backups folder.
-### Offline Capability: All data is stored securely on your local machine. No internet connection is required to make sales or check the ledger.
+- Database Backup: Click the "Backup Database" button at the bottom of the sidebar at any time to export a full copy of your system data securely to your Documents/backups folder.
+- Offline Capability: All data is stored securely on your local machine. No internet connection is required to make sales or check the ledger.
